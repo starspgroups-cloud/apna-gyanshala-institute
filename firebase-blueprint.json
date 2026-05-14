@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents both students and administrators in the system.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique Firebase Auth ID." },
+        "name": { "type": "string", "description": "Full name of the user." },
+        "email": { "type": "string", "format": "email", "description": "Email address." },
+        "role": { "type": "string", "enum": ["admin", "student"], "description": "The role of the user." },
+        "course": { "type": "string", "description": "The course the student is enrolled in (if student)." },
+        "status": { "type": "string", "enum": ["Active", "Pending"], "description": "Account status." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of last update." }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt", "updatedAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Educational courses offered by the portal.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "tag": { "type": "string" },
+        "price": { "type": "string" },
+        "studentsCount": { "type": "integer" }
+      },
+      "required": ["id", "title", "description", "tag", "price"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Store all user profiles (admins and students)."
+    },
+    "courses/{courseId}": {
+      "schema": "Course",
+      "description": "Store course details."
+    }
+  }
+}
