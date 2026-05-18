@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.apnagyanshala.app",
+      "sha256_cert_fingerprints": [
+        "DC:A3:2E:5D:EB:FF:12:51:E3:0C:91:1D:35:85:43:1D:28:17:02:A5:7E:A6:DA:6E:66:F1:98:D4:F2:34:1F:CF"
+      ]
+    }
+  }
+]

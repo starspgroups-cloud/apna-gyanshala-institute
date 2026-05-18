@@ -51,15 +51,29 @@ export default function Navbar() {
               </Link>
             ))}
             
-            <div className="flex items-center gap-4 border-l border-indigo-700 pl-6 ml-2">
-              <Link to="/login/student" className="text-[10px] font-black text-white uppercase tracking-widest hover:text-yellow-400 transition-colors">
-                LOGIN
-              </Link>
-              <Link to="/login/admin" className="bg-yellow-500 text-indigo-950 px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all shadow-lg active:scale-95">
-                ADMIN
-              </Link>
-            </div>
-          </div>
+            <div className="flex items-center gap-3 border-l border-indigo-700 pl-6 ml-2">
+  <Link
+    to="/login/student"
+    className="text-[10px] font-black text-white uppercase tracking-widest hover:text-yellow-400 transition-colors"
+  >
+    STUDENT
+  </Link>
+
+  <Link
+    to="/login/teacher"
+    className="bg-white text-indigo-900 px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-lg active:scale-95"
+  >
+    TEACHER
+  </Link>
+
+  <Link
+    to="/login/admin"
+    className="bg-yellow-500 text-indigo-950 px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all shadow-lg active:scale-95"
+  >
+    ADMIN
+  </Link>
+</div>
+</div>
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-4">

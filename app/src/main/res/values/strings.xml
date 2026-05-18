@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName">Apna Gyanshala Institute</string>
+    <string name="launcherName">Apna GI</string>
+    <string name="launchUrl">https://www.apnagyanshala.in/</string>
+    <string name="webManifestUrl">https://www.apnagyanshala.in/manifest.json</string>
+    <string name="hostName">www.apnagyanshala.in</string>
+    <string name="providerAuthority">in.apnagyanshala.app.fileprovider</string>
+    <string name="generatorApp">bubblewrap-cli</string>
+    <string name="fallbackType">customtabs</string>
+    <string name="orientation">portrait</string>
+
+    <string name="assetStatements">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {
+                \"namespace\": \"web\",
+                \"site\": \"https://www.apnagyanshala.in\"
+            }
+        }]
+    </string>
+</resources>

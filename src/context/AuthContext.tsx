@@ -1,13 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
-  user: User | null;
+  user: any | null;
   profile: any | null;
   loading: boolean;
   isAdmin: boolean;
+  refreshAuth: () => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,37 +14,95 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   isAdmin: false,
+  refreshAuth: () => {},
+  logout: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
+const readMongoAuth = () => {
+  const token = localStorage.getItem("ag_token");
+  const role = localStorage.getItem("ag_user_role");
+  const uid = localStorage.getItem("ag_user_uid");
+  const email = localStorage.getItem("ag_user_email");
+  const rawUser = localStorage.getItem("ag_user_data");
+
+  let savedProfile: any = null;
+
+  try {
+    savedProfile = rawUser ? JSON.parse(rawUser) : null;
+  } catch {
+    savedProfile = null;
+  }
+
+  if (!token || !role || !savedProfile) {
+    return {
+      user: null,
+      profile: null,
+    };
+  }
+
+  const profile = {
+    id: savedProfile._id || savedProfile.id || uid,
+    uid: savedProfile._id || savedProfile.id || uid,
+    ...savedProfile,
+    role,
+    email: savedProfile.email || email,
+  };
+
+  const user = {
+    uid: profile.uid,
+    email: profile.email || email,
+  };
+
+  return { user, profile };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setProfile(docSnap.data());
-        }
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
+  const refreshAuth = () => {
+    setLoading(true);
+    const authData = readMongoAuth();
+    setUser(authData.user);
+    setProfile(authData.profile);
+    setLoading(false);
+  };
 
-    return () => unsubscribe();
+  const logout = () => {
+    localStorage.removeItem("ag_token");
+    localStorage.removeItem("ag_user_role");
+    localStorage.removeItem("ag_user_uid");
+    localStorage.removeItem("ag_user_email");
+    localStorage.removeItem("ag_user_data");
+    setUser(null);
+    setProfile(null);
+  };
+
+  useEffect(() => {
+    refreshAuth();
+
+    const handleAuthUpdate = () => refreshAuth();
+
+    window.addEventListener("storage", handleAuthUpdate);
+    window.addEventListener("ag-auth-updated", handleAuthUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleAuthUpdate);
+      window.removeEventListener("ag-auth-updated", handleAuthUpdate);
+    };
   }, []);
 
-  const isAdmin = profile?.role === 'admin' || user?.email === 'durgeshpuri95@gmail.com';
+  const adminEmails = ["starspgroups@gmail.com", "durgeshpuri95@gmail.com"];
+
+  const isAdmin =
+    profile?.role === "admin" ||
+    adminEmails.includes(user?.email?.toLowerCase() || "");
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, refreshAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );
