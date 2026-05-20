@@ -78,6 +78,26 @@ const studentSchema = new mongoose.Schema(
     qrEnabled: { type: Boolean, default: true },
 
     status: { type: String, default: "active" },
+    verificationStatus: {
+  type: String,
+  enum: ["pending", "verified", "blocked"],
+  default: "pending",
+},
+
+emailOtpHash: { type: String, default: "" },
+mobileOtpHash: { type: String, default: "" },
+
+emailOtpExpiresAt: { type: Date, default: null },
+mobileOtpExpiresAt: { type: Date, default: null },
+
+emailOtpAttempts: { type: Number, default: 0 },
+mobileOtpAttempts: { type: Number, default: 0 },
+
+emailOtpResendAfter: { type: Date, default: null },
+mobileOtpResendAfter: { type: Date, default: null },
+
+lastOtpSentAt: { type: Date, default: null },
+otpBlockedUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );

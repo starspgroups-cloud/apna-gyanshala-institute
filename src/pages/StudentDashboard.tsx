@@ -629,8 +629,15 @@ export default function StudentDashboard() {
 
       // Name + basic details - always full opacity and dark
       ctx.globalAlpha = 1;
-      fitText(studentName.toUpperCase(), 258, 258, 435, "900 33px Arial", "#312e81");
-      fitText(`ID: ${studentId}`, 258, 297, 350, "900 21px Arial", "#b45309");
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = "rgba(0,0,0,0.18)";
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetY = 1;
+      fitText(studentName.toUpperCase(), 258, 258, 435, "900 34px Arial", "#17135f");
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      fitText(`ID: ${studentId}`, 258, 297, 350, "900 21px Arial", "#92400e");
 
       const detailsX = 258;
       const labelX = detailsX;
@@ -1211,7 +1218,24 @@ export default function StudentDashboard() {
                       </div>
 
                       <div className="min-w-0 pt-[1mm]">
-                        <p className="truncate text-[9px] font-black uppercase leading-tight text-indigo-900">{studentName}</p>
+                        <div
+                          className="uppercase"
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 900,
+                            color: "#17135f",
+                            lineHeight: "1.08",
+                            letterSpacing: "0.35px",
+                            textShadow: "0 1px 2px rgba(0,0,0,0.18)",
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {studentName}
+                        </div>
                         <p className="mt-[1mm] text-[6px] font-black uppercase text-yellow-700">ID: {studentId}</p>
                         <div className="mt-[2mm] space-y-[0.7mm] text-[5.8px] font-bold leading-tight text-slate-700">
                           <p><b>Course:</b> {studentCourse}</p>
