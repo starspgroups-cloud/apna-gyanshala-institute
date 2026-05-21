@@ -21,6 +21,8 @@ import Registration from "./pages/Registration";
 import VerifyOtp from "./pages/VerifyOtp";
 import TeacherRegistration from "./pages/TeacherRegistration";
 
+import LiveClass from "./pages/LiveClass";
+
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
@@ -105,6 +107,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/live-class" element={<LiveClass />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/feedback" element={<Feedback />} />
