@@ -101,6 +101,23 @@ export default function LandingPage() {
 
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link
+  to="/live-class"
+  className="relative overflow-hidden rounded-md bg-red-600 px-5 py-3 text-sm font-black uppercase tracking-wider text-white transition-all duration-300 hover:bg-red-700"
+>
+  <span className="relative z-10 flex items-center gap-2">
+    
+    <span className="relative flex h-3 w-3">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
+      <span className="relative inline-flex h-3 w-3 rounded-full bg-white"></span>
+    </span>
+
+    JOIN LIVE CLASSES
+  </span>
+
+  <span className="absolute inset-0 animate-pulse bg-red-500 opacity-20"></span>
+</Link>
+
+                <Link
                   to="/register"
                   className="bg-indigo-900 text-white px-10 py-5 rounded text-lg font-black uppercase tracking-tight hover:bg-indigo-800 shadow-xl active:translate-y-px transition-all"
                 >
