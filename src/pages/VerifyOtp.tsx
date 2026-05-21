@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Mail, Phone, ShieldCheck, Loader2, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  ShieldCheck,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api } from "../lib/api";
 import Logo from "../components/Logo";
@@ -8,15 +14,13 @@ import Logo from "../components/Logo";
 type PendingOtpData = {
   studentId?: string;
   email?: string;
-  mobile?: string;
 };
 
 const getPendingOtpData = (state: any): PendingOtpData => {
-  if (state?.studentId || state?.email || state?.mobile) {
+  if (state?.studentId || state?.email) {
     return {
       studentId: state.studentId,
       email: state.email,
-      mobile: state.mobile,
     };
   }
 
@@ -38,21 +42,19 @@ export default function VerifyOtp() {
   );
 
   const [emailOtp, setEmailOtp] = useState("");
-  const [mobileOtp, setMobileOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [counter, setCounter] = useState(60);
 
   const studentId = pendingData.studentId;
   const email = pendingData.email;
-  const mobile = pendingData.mobile;
 
   useEffect(() => {
-    if (!studentId && !email && !mobile) {
+    if (!studentId && !email) {
       toast.error("Verification data missing. Please register again.");
       navigate("/register", { replace: true });
     }
-  }, [studentId, email, mobile, navigate]);
+  }, [studentId, email, navigate]);
 
   useEffect(() => {
     if (counter <= 0) return;
@@ -67,14 +69,14 @@ export default function VerifyOtp() {
   const verifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!studentId && !email && !mobile) {
+    if (!studentId && !email) {
       toast.error("Verification data missing. Please register again.");
       navigate("/register", { replace: true });
       return;
     }
 
-    if (!/^\d{6}$/.test(emailOtp) || !/^\d{6}$/.test(mobileOtp)) {
-      toast.error("Email aur Mobile dono OTP 6 digit hone chahiye");
+    if (!/^\d{6}$/.test(emailOtp)) {
+      toast.error("Email OTP 6 digit hona chahiye");
       return;
     }
 
@@ -84,9 +86,7 @@ export default function VerifyOtp() {
       const res = await api.post("/api/auth/verify-otp", {
         studentId,
         email,
-        mobile,
         emailOtp,
-        mobileOtp,
       });
 
       if (res.data?.success) {
@@ -116,13 +116,11 @@ export default function VerifyOtp() {
       const res = await api.post("/api/auth/resend-otp", {
         studentId,
         email,
-        mobile,
       });
 
       if (res.data?.success) {
         toast.success("Fresh OTP sent ✅");
         setEmailOtp("");
-        setMobileOtp("");
         setCounter(Number(res.data?.resendAfterSeconds || 60));
         return;
       }
@@ -130,9 +128,11 @@ export default function VerifyOtp() {
       toast.error(res.data?.message || "OTP resend failed");
     } catch (error: any) {
       const waitSeconds = Number(error?.response?.data?.waitSeconds || 60);
+
       if (error?.response?.status === 429) {
         setCounter(waitSeconds);
       }
+
       toast.error(error?.response?.data?.message || "OTP resend failed");
     } finally {
       setResending(false);
@@ -163,15 +163,15 @@ export default function VerifyOtp() {
           </h1>
 
           <p className="mt-2 text-xs font-bold text-slate-500">
-            Email aur Mobile OTP verify karna zaruri hai
+            Sirf Email OTP verification required hai
           </p>
         </div>
 
         <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-xs font-bold text-indigo-900">
           <p>Email: {email || "Registered email"}</p>
-          <p className="mt-1">Mobile: {mobile || "Registered mobile"}</p>
+
           <p className="mt-3 text-red-600">
-            Mobile OTP abhi backend terminal me dikhega. SMS provider connect karne ke baad mobile par direct jayega.
+            OTP aapke registered email par bheja gaya hai.
           </p>
         </div>
 
@@ -182,33 +182,20 @@ export default function VerifyOtp() {
             </label>
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Mail
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
+
               <input
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
                 value={emailOtp}
-                onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) =>
+                  setEmailOtp(e.target.value.replace(/\D/g, ""))
+                }
                 placeholder="Enter 6 digit email OTP"
-                className="w-full border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-[10px] font-black text-slate-500 tracking-widest">
-              MOBILE OTP
-            </label>
-
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={mobileOtp}
-                onChange={(e) => setMobileOtp(e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter 6 digit mobile OTP"
                 className="w-full border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
@@ -219,7 +206,10 @@ export default function VerifyOtp() {
             disabled={loading}
             className="flex w-full items-center justify-center gap-2 bg-indigo-900 px-4 py-4 text-sm font-black tracking-widest text-white shadow-xl hover:bg-indigo-800 disabled:opacity-60"
           >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : null}
+            {loading ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : null}
+
             VERIFY ACCOUNT
           </button>
         </form>
@@ -229,8 +219,15 @@ export default function VerifyOtp() {
           disabled={resending || counter > 0}
           className="mt-5 flex w-full items-center justify-center gap-2 border border-indigo-900 px-4 py-3 text-xs font-black tracking-widest text-indigo-900 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {resending ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
-          {counter > 0 ? `RESEND OTP IN ${counter}s` : "RESEND OTP"}
+          {resending ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <RefreshCw size={16} />
+          )}
+
+          {counter > 0
+            ? `RESEND OTP IN ${counter}s`
+            : "RESEND OTP"}
         </button>
       </div>
     </div>
