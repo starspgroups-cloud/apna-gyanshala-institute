@@ -10,7 +10,7 @@ const studentSchema = new mongoose.Schema(
     fatherName: { type: String, required: true },
     motherName: { type: String, required: true },
 
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
 
     mobile: { type: String, required: true, unique: true },
     phone: { type: String, default: "" },
@@ -41,6 +41,27 @@ const studentSchema = new mongoose.Schema(
 
     isEmailVerified: { type: Boolean, default: false },
     isMobileVerified: { type: Boolean, default: false },
+
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "verified", "blocked"],
+      default: "pending",
+    },
+
+    emailOtpHash: { type: String, default: "" },
+    mobileOtpHash: { type: String, default: "" },
+
+    emailOtpExpiresAt: { type: Date, default: null },
+    mobileOtpExpiresAt: { type: Date, default: null },
+
+    emailOtpAttempts: { type: Number, default: 0 },
+    mobileOtpAttempts: { type: Number, default: 0 },
+
+    emailOtpResendAfter: { type: Date, default: null },
+    mobileOtpResendAfter: { type: Date, default: null },
+
+    lastOtpSentAt: { type: Date, default: null },
+    otpBlockedUntil: { type: Date, default: null },
 
     attendancePercentage: { type: Number, default: 0 },
     totalClasses: { type: Number, default: 0 },
@@ -78,26 +99,6 @@ const studentSchema = new mongoose.Schema(
     qrEnabled: { type: Boolean, default: true },
 
     status: { type: String, default: "active" },
-    verificationStatus: {
-  type: String,
-  enum: ["pending", "verified", "blocked"],
-  default: "pending",
-},
-
-emailOtpHash: { type: String, default: "" },
-mobileOtpHash: { type: String, default: "" },
-
-emailOtpExpiresAt: { type: Date, default: null },
-mobileOtpExpiresAt: { type: Date, default: null },
-
-emailOtpAttempts: { type: Number, default: 0 },
-mobileOtpAttempts: { type: Number, default: 0 },
-
-emailOtpResendAfter: { type: Date, default: null },
-mobileOtpResendAfter: { type: Date, default: null },
-
-lastOtpSentAt: { type: Date, default: null },
-otpBlockedUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );

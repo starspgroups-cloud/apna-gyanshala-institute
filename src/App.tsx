@@ -18,6 +18,7 @@ import StudentLogin from "./pages/StudentLogin";
 import TeacherLogin from "./pages/TeacherLogin";
 
 import Registration from "./pages/Registration";
+import VerifyOtp from "./pages/VerifyOtp";
 import TeacherRegistration from "./pages/TeacherRegistration";
 
 import AdminDashboard from "./pages/AdminDashboard";
@@ -114,6 +115,7 @@ export default function App() {
             <Route path="/login/teacher" element={<TeacherLogin />} />
 
             <Route path="/register" element={<Registration />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
             <Route path="/register/teacher" element={<TeacherRegistration />} />
 
             <Route path="/admin/*" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />

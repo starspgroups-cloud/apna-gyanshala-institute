@@ -69,8 +69,27 @@ export default function StudentLogin() {
     } catch (error: any) {
       console.error("Student Login Error:", error);
 
+      const data = error?.response?.data;
+
+      if (data?.requiresOtpVerification) {
+        const pendingOtpData = {
+          studentId: data.studentId,
+          email: data.email || cleanEmail,
+          mobile: data.mobile || "",
+        };
+
+        localStorage.setItem("ag_pending_otp", JSON.stringify(pendingOtpData));
+
+        toast.error("Pehle OTP verify karo");
+        navigate("/verify-otp", {
+          state: pendingOtpData,
+          replace: true,
+        });
+        return;
+      }
+
       const message =
-        error?.response?.data?.message ||
+        data?.message ||
         error?.message ||
         "Login failed";
 

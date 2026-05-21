@@ -522,8 +522,20 @@ export default function Registration() {
         return;
       }
 
-      toast.success("Registration Successful ✅");
-      navigate("/login/student");
+      const pendingOtpData = {
+        studentId: data.studentId,
+        email: data.email || cleanEmail,
+        mobile: data.mobile || cleanPhone,
+      };
+
+      localStorage.setItem("ag_pending_otp", JSON.stringify(pendingOtpData));
+
+      toast.success(data?.message || "OTP sent successfully ✅");
+
+      navigate("/verify-otp", {
+        state: pendingOtpData,
+        replace: true,
+      });
     } catch (error: any) {
       console.error("Registration Error:", error);
 
