@@ -31,7 +31,8 @@ const addSeconds = (seconds) => new Date(Date.now() + seconds * 1000);
 const isExpired = (date) => !date || new Date(date).getTime() < Date.now();
 
 const normalizeEmail = (email) => String(email || "").toLowerCase().trim();
-const normalizeMobile = (mobile) => String(mobile || "").replace(/\D/g, "").trim();
+const normalizeMobile = (mobile) =>
+  String(mobile || "").replace(/\D/g, "").trim();
 
 const defaultAttendance = {
   totalPresent: 0,
@@ -67,22 +68,26 @@ const makeSafeStudent = (student) => {
   return safeStudent;
 };
 
-// ================= EMAIL =================
+// ================= BREVO EMAIL =================
 
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 587,
   secure: false,
+  requireTLS: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
   tls: {
     rejectUnauthorized: false,
   },
 });
 
-transporter.verify(function (error, success) {
+transporter.verify((error) => {
   if (error) {
     console.log("❌ SMTP VERIFY ERROR:");
     console.log(error);
@@ -97,8 +102,10 @@ const sendEmailOtp = async ({ email, fullName, otp }) => {
     return;
   }
 
+  console.log(`📧 Email OTP for ${email}: ${otp}`);
+
   await transporter.sendMail({
-    from: `"Apna Gyanshala" <${process.env.EMAIL_USER}>`,
+    from: `"Apna Gyanshala" <${process.env.SMTP_FROM_EMAIL || "starspgroups@gmail.com"}>`,
     to: email,
     subject: "Apna Gyanshala OTP Verification",
     html: `
@@ -129,11 +136,11 @@ const sendEmailOtp = async ({ email, fullName, otp }) => {
       </div>
     `,
   });
+
+  console.log("✅ Email OTP sent successfully");
 };
 
 const sendMobileOtp = async ({ mobile, otp }) => {
-  // SMS provider can be connected here later.
-  // For now, mobile OTP is visible in backend logs.
   console.log(`📱 Mobile OTP for ${mobile}: ${otp}`);
 };
 
@@ -157,12 +164,7 @@ const sendFreshOtpToStudent = async (student) => {
     verificationStatus: "pending",
   };
 
-  await Student.updateOne(
-    { _id: student._id },
-    {
-      $set: otpUpdate,
-    }
-  );
+  await Student.updateOne({ _id: student._id }, { $set: otpUpdate });
 
   Object.assign(student, otpUpdate);
 
@@ -444,8 +446,10 @@ exports.verifyStudentOtp = async (req, res) => {
     const mobileOtpMatched = hashOtp(mobileOtp) === student.mobileOtpHash;
 
     if (!emailOtpMatched || !mobileOtpMatched) {
-      const nextEmailAttempts = Number(student.emailOtpAttempts || 0) + (emailOtpMatched ? 0 : 1);
-      const nextMobileAttempts = Number(student.mobileOtpAttempts || 0) + (mobileOtpMatched ? 0 : 1);
+      const nextEmailAttempts =
+        Number(student.emailOtpAttempts || 0) + (emailOtpMatched ? 0 : 1);
+      const nextMobileAttempts =
+        Number(student.mobileOtpAttempts || 0) + (mobileOtpMatched ? 0 : 1);
 
       const blockUntil =
         nextEmailAttempts >= OTP_MAX_ATTEMPTS || nextMobileAttempts >= OTP_MAX_ATTEMPTS
