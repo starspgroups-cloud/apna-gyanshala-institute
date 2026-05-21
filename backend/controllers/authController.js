@@ -1,3 +1,4 @@
+const axios = require("axios");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Student = require("../models/Student");
@@ -134,7 +135,45 @@ const sendEmailOtp = async ({ email, fullName, otp }) => {
 };
 
 const sendMobileOtp = async ({ mobile, otp }) => {
-  console.log(`📱 Mobile OTP for ${mobile}: ${otp}`);
+  try {
+    const cleanMobile = String(mobile).replace(/\D/g, "");
+    const toNumber = cleanMobile.startsWith("91")
+      ? cleanMobile
+      : `91${cleanMobile}`;
+
+    const response = await axios.post(
+      `${process.env.INFOBIP_BASE_URL}/whatsapp/1/message/template`,
+      {
+        messages: [
+          {
+            from: "447860088970",
+            to: toNumber,
+            content: {
+              templateName: "hello_world",
+              templateData: {
+                body: {
+                  placeholders: [otp],
+                },
+              },
+              language: "en",
+            },
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `App ${process.env.INFOBIP_API_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    console.log("✅ WHATSAPP OTP SENT:", response.data);
+  } catch (error) {
+    console.log("❌ WHATSAPP OTP ERROR:", error.response?.data || error.message);
+    console.log(`📱 Mobile OTP fallback for ${mobile}: ${otp}`);
+  }
 };
 
 // ================= OTP ENGINE =================
