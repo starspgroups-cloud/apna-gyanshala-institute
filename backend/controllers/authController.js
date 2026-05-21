@@ -1,4 +1,3 @@
-const axios = require("axios");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Student = require("../models/Student");
@@ -43,7 +42,9 @@ const defaultAttendance = {
 };
 
 const makeSafeStudent = (student) => {
-  const safeStudent = student?.toObject ? student.toObject() : { ...(student || {}) };
+  const safeStudent = student?.toObject
+    ? student.toObject()
+    : { ...(student || {}) };
 
   delete safeStudent.password;
   delete safeStudent.emailOtpHash;
@@ -69,12 +70,9 @@ const makeSafeStudent = (student) => {
   return safeStudent;
 };
 
-// ================= BREVO EMAIL =================
-
 // ================= BREVO API EMAIL =================
 
 const brevoClient = SibApiV3Sdk.ApiClient.instance;
-
 const apiKey = brevoClient.authentications["api-key"];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 
@@ -109,7 +107,9 @@ const sendEmailOtp = async ({ email, fullName, otp }) => {
           </div>
 
           <div style="padding:34px">
-            <h2 style="color:#111827;margin-top:0">Hello ${fullName || "Student"},</h2>
+            <h2 style="color:#111827;margin-top:0">Hello ${
+              fullName || "Student"
+            },</h2>
             <p style="font-size:15px;color:#374151;line-height:1.7">Your verification OTP is:</p>
 
             <div style="font-size:42px;font-weight:900;letter-spacing:10px;text-align:center;color:#312e81;margin:30px 0">
@@ -134,63 +134,16 @@ const sendEmailOtp = async ({ email, fullName, otp }) => {
   console.log("✅ BREVO API EMAIL OTP SENT");
 };
 
-const sendMobileOtp = async ({ mobile, otp }) => {
-  try {
-    const cleanMobile = String(mobile).replace(/\D/g, "");
-    const toNumber = cleanMobile.startsWith("91")
-      ? cleanMobile
-      : `91${cleanMobile}`;
-
-    const response = await axios.post(
-      `${process.env.INFOBIP_BASE_URL}/whatsapp/1/message/template`,
-      {
-        messages: [
-          {
-            from: "447860088970",
-            to: toNumber,
-            content: {
-              templateName: "hello_world",
-              templateData: {
-                body: {
-                  placeholders: [otp],
-                },
-              },
-              language: "en",
-            },
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `App ${process.env.INFOBIP_API_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
-
-    console.log("✅ WHATSAPP OTP SENT:", response.data);
-  } catch (error) {
-    console.log("❌ WHATSAPP OTP ERROR:", error.response?.data || error.message);
-    console.log(`📱 Mobile OTP fallback for ${mobile}: ${otp}`);
-  }
-};
-
 // ================= OTP ENGINE =================
 
 const sendFreshOtpToStudent = async (student) => {
   const emailOtp = createOtp();
-  const mobileOtp = createOtp();
 
   const otpUpdate = {
     emailOtpHash: hashOtp(emailOtp),
-    mobileOtpHash: hashOtp(mobileOtp),
     emailOtpExpiresAt: addMinutes(OTP_EXPIRE_MINUTES),
-    mobileOtpExpiresAt: addMinutes(OTP_EXPIRE_MINUTES),
     emailOtpAttempts: 0,
-    mobileOtpAttempts: 0,
     emailOtpResendAfter: addSeconds(OTP_RESEND_SECONDS),
-    mobileOtpResendAfter: addSeconds(OTP_RESEND_SECONDS),
     lastOtpSentAt: new Date(),
     otpBlockedUntil: null,
     verificationStatus: "pending",
@@ -204,11 +157,6 @@ const sendFreshOtpToStudent = async (student) => {
     email: student.email,
     fullName: student.fullName || student.name,
     otp: emailOtp,
-  });
-
-  await sendMobileOtp({
-    mobile: student.mobile || student.phone,
-    otp: mobileOtp,
   });
 };
 
@@ -276,16 +224,20 @@ exports.registerStudent = async (req, res) => {
     }
 
     const existingStudent = await Student.findOne({
-      $or: [{ email: cleanEmail }, { mobile: cleanMobile }, { phone: cleanMobile }],
+      $or: [
+        { email: cleanEmail },
+        { mobile: cleanMobile },
+        { phone: cleanMobile },
+      ],
     });
 
     if (existingStudent) {
-      if (!existingStudent.isEmailVerified || !existingStudent.isMobileVerified) {
+      if (!existingStudent.isEmailVerified) {
         await sendFreshOtpToStudent(existingStudent);
 
         return res.status(200).json({
           success: true,
-          message: "Account already pending. Fresh OTP sent.",
+          message: "Account already pending. Fresh Email OTP sent.",
           studentId: existingStudent._id,
           email: existingStudent.email,
           mobile: existingStudent.mobile || existingStudent.phone,
@@ -359,7 +311,7 @@ exports.registerStudent = async (req, res) => {
       role: "student",
 
       isEmailVerified: false,
-      isMobileVerified: false,
+      isMobileVerified: true,
       verificationStatus: "pending",
 
       attendancePercentage: 0,
@@ -409,7 +361,7 @@ exports.registerStudent = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Registration successful. OTP sent.",
+      message: "Registration successful. Email OTP sent.",
       studentId: student._id,
       email: cleanEmail,
       mobile: cleanMobile,
@@ -430,7 +382,7 @@ exports.registerStudent = async (req, res) => {
 
 exports.verifyStudentOtp = async (req, res) => {
   try {
-    const { studentId, email, mobile, emailOtp, mobileOtp } = req.body;
+    const { studentId, email, mobile, emailOtp } = req.body;
 
     const query = buildStudentQuery({ studentId, email, mobile });
 
@@ -460,14 +412,14 @@ exports.verifyStudentOtp = async (req, res) => {
       });
     }
 
-    if (!emailOtp || !mobileOtp) {
+    if (!emailOtp) {
       return res.status(400).json({
         success: false,
-        message: "Email OTP and Mobile OTP both are required",
+        message: "Email OTP required",
       });
     }
 
-    if (isExpired(student.emailOtpExpiresAt) || isExpired(student.mobileOtpExpiresAt)) {
+    if (isExpired(student.emailOtpExpiresAt)) {
       return res.status(400).json({
         success: false,
         message: "OTP expired. Please resend OTP.",
@@ -475,16 +427,12 @@ exports.verifyStudentOtp = async (req, res) => {
     }
 
     const emailOtpMatched = hashOtp(emailOtp) === student.emailOtpHash;
-    const mobileOtpMatched = hashOtp(mobileOtp) === student.mobileOtpHash;
 
-    if (!emailOtpMatched || !mobileOtpMatched) {
-      const nextEmailAttempts =
-        Number(student.emailOtpAttempts || 0) + (emailOtpMatched ? 0 : 1);
-      const nextMobileAttempts =
-        Number(student.mobileOtpAttempts || 0) + (mobileOtpMatched ? 0 : 1);
+    if (!emailOtpMatched) {
+      const nextEmailAttempts = Number(student.emailOtpAttempts || 0) + 1;
 
       const blockUntil =
-        nextEmailAttempts >= OTP_MAX_ATTEMPTS || nextMobileAttempts >= OTP_MAX_ATTEMPTS
+        nextEmailAttempts >= OTP_MAX_ATTEMPTS
           ? addMinutes(OTP_BLOCK_MINUTES)
           : null;
 
@@ -493,7 +441,6 @@ exports.verifyStudentOtp = async (req, res) => {
         {
           $set: {
             emailOtpAttempts: nextEmailAttempts,
-            mobileOtpAttempts: nextMobileAttempts,
             otpBlockedUntil: blockUntil,
           },
         }
@@ -501,7 +448,7 @@ exports.verifyStudentOtp = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP",
+        message: "Invalid Email OTP",
       });
     }
 
@@ -566,7 +513,7 @@ exports.resendStudentOtp = async (req, res) => {
       });
     }
 
-    if (student.isEmailVerified && student.isMobileVerified) {
+    if (student.isEmailVerified) {
       return res.status(400).json({
         success: false,
         message: "Account already verified",
@@ -592,7 +539,7 @@ exports.resendStudentOtp = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "OTP resent successfully",
+      message: "Email OTP resent successfully",
       resendAfterSeconds: OTP_RESEND_SECONDS,
     });
   } catch (error) {
@@ -631,12 +578,12 @@ exports.loginStudent = async (req, res) => {
       });
     }
 
-    if (!student.isEmailVerified || !student.isMobileVerified) {
+    if (!student.isEmailVerified) {
       await sendFreshOtpToStudent(student);
 
       return res.status(403).json({
         success: false,
-        message: "Please verify email and mobile OTP before login",
+        message: "Please verify email OTP before login",
         requiresOtpVerification: true,
         studentId: student._id,
         email: student.email,
